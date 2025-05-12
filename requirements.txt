@@ -1,0 +1,4 @@
+aiokafka==0.12.0
+dramatiq==1.17.0
+pydantic_settings==2.9.1
+SQLAlchemy==2.0.32
