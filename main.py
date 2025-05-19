@@ -3,18 +3,13 @@ import asyncio
 import json
 from aiokafka import AIOKafkaConsumer
 from tasks import process_data_batch
-
-
-KAFKA_BOOTSTRAP = "localhost:9092"
-TOPIC = "raw_data_topic"
-BATCH_SIZE = 50
-POLL_TIMEOUT_MS = 5000  # 5 секунд — время ожидания, чтобы "дозаполнить" батч
+from settings import settings
 
 
 async def consume():
     consumer = AIOKafkaConsumer(
-        TOPIC,
-        bootstrap_servers=KAFKA_BOOTSTRAP,
+        settings.TOPIC,
+        bootstrap_servers=f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}",
         value_deserializer=lambda v: json.loads(v.decode()),
         enable_auto_commit=False,  # чтобы не коммитить сразу после каждого сообщения
     )
@@ -24,8 +19,8 @@ async def consume():
         while True:
             # Забираем до BATCH_SIZE записей за один syscall
             records = await consumer.getmany(
-                timeout_ms=POLL_TIMEOUT_MS,
-                max_records=BATCH_SIZE,
+                timeout_ms=settings.POLL_TIMEOUT_MS,
+                max_records=settings.BATCH_SIZE,
             )
 
             batch = []
@@ -38,17 +33,20 @@ async def consume():
                 continue
 
             # Отправляем все сообщения из батча в драматик
-            process_data_batch.send(batch)
+            try:
+                process_data_batch.send(batch)
 
-            # После успешной отправки — можем закоммитить смещения
-            # (чтобы при перезапуске не реобрабатывать те же сообщения)
-            last_offsets = {
-                tp: batch_msgs[-1].offset + 1
-                for tp, batch_msgs in records.items()
-                if batch_msgs
-            }
-            await consumer.commit(offsets=last_offsets)
-
+                # После успешной отправки — можем закоммитить смещения
+                # (чтобы при перезапуске не реобрабатывать те же сообщения)
+                last_offsets = {
+                    tp: batch_msgs[-1].offset + 1
+                    for tp, batch_msgs in records.items()
+                    if batch_msgs
+                }
+                await consumer.commit(offsets=last_offsets)
+            except Exception as e:
+                print(f'error: {e}')
+    
     finally:
         await consumer.stop()
 

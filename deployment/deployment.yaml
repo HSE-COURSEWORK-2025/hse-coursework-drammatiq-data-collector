@@ -1,0 +1,45 @@
+---
+# Deployment основного приложения (Kafka‑consumer)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collection-consumer-app-deployment
+  labels:
+    app: data-collection-consumer-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collection-consumer-app
+  template:
+    metadata:
+      labels:
+        app: data-collection-consumer-app
+    spec:
+      containers:
+      - name: data-collection-consumer-app
+        image: awesomecosmonaut/data-collection-consumer-app:latest
+        # нет ports — приложение не слушает HTTP
+---
+# Deployment воркера (Dramatiq tasks)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collection-dramatiq-app-deployment
+  labels:
+    app: data-collection-dramatiq-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collection-dramatiq-app
+  template:
+    metadata:
+      labels:
+        app: data-collection-dramatiq-app
+    spec:
+      containers:
+      - name: data-collection-dramatiq-app
+        image: awesomecosmonaut/data-collection-dramatiq-app:latest
+        command: ["dramatiq", "tasks"]
+
