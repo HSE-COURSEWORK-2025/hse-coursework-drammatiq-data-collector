@@ -4,3 +4,4 @@ pydantic_settings
 SQLAlchemy
 redis
 psycopg2-binary
+python-dateutil

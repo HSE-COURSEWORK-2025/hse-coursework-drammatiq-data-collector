@@ -12,6 +12,7 @@ async def consume():
         bootstrap_servers=f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}",
         value_deserializer=lambda v: json.loads(v.decode()),
         enable_auto_commit=False,  # чтобы не коммитить сразу после каждого сообщения
+        group_id=settings.KAFKA_GROUP_ID
     )
     await consumer.start()
     print('consuming')
@@ -34,7 +35,7 @@ async def consume():
 
             # Отправляем все сообщения из батча в драматик
             try:
-                process_data_batch.send(batch)
+                process_data_batch.send([msg.value for msg in batch])
 
                 # После успешной отправки — можем закоммитить смещения
                 # (чтобы при перезапуске не реобрабатывать те же сообщения)
@@ -45,6 +46,7 @@ async def consume():
                 }
                 await consumer.commit(offsets=last_offsets)
             except Exception as e:
+                # print(f'{batch}')
                 print(f'error: {e}')
     
     finally:

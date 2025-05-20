@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str | None = "redis"
     REDIS_PORT: str | None = "6379"
+    KAFKA_GROUP_ID: str | None = "raw-data-consumer-group"
     
 
     model_config = SettingsConfigDict(

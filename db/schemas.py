@@ -48,11 +48,7 @@ class RawRecords(Base):
     __tablename__ = "raw_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    data_type = Column(
-        SQLEnum(DataType, name="data_type_enum"),
-        nullable=False,
-        index=True,
-    )
+    data_type = Column(String, nullable=False, )
     email = Column(String, nullable=False, index=True)
     time = Column(DateTime(timezone=True), nullable=False, index=True)
     value = Column(Text, nullable=False)
