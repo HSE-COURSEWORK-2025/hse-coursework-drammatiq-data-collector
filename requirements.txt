@@ -5,3 +5,4 @@ SQLAlchemy
 redis
 psycopg2-binary
 python-dateutil
+aioredis

@@ -1,5 +1,7 @@
 import asyncio
 import dramatiq
+import logging
+from settings import settings
 from broker import broker
 from datetime import datetime
 from typing import List
@@ -32,19 +34,19 @@ async def process_data_batch(batch: List[dict]):
 
             if not raw_time:
                 # логируем и пропускаем
-                print(f"Нет поля time/timestamp в записи: {data}")
+                logging.info(f"Нет поля time/timestamp в записи: {data}")
                 continue
 
             # Парсим время
             try:
                 time_obj = parser.parse(raw_time)
             except Exception:
-                print(f"Не удалось распарсить время у записи: {data}")
-                print(f'time field {raw_time}')
+                logging.info(f"Не удалось распарсить время у записи: {data}")
+                logging.info(f'time field {raw_time}')
                 continue
 
             if isinstance(value, str) and not value.strip():
-                print(f"Пропускаем запись с пустым или whitespace-only value: {data}")
+                logging.info(f"Пропускаем запись с пустым или whitespace-only value: {data}")
                 continue
 
             # Проверяем дубликат
@@ -54,10 +56,10 @@ async def process_data_batch(batch: List[dict]):
                     RawRecords.data_type== data_type,
                     RawRecords.time     == time_obj
                 )
-            ).scalar_one_or_none()
+            ).scalars().first()
 
             if exists:
-                print(f"Пропускаем дубликат: {email} / {data_type} @ {raw_time}")
+                logging.info(f"Пропускаем дубликат: {email} / {data_type} @ {raw_time}")
                 continue
 
             # Готовим новую запись
@@ -71,13 +73,13 @@ async def process_data_batch(batch: List[dict]):
         if new_records:
             session.add_all(new_records)
             session.commit()
-            print(f"Сохранено {len(new_records)} новых записей в БД.")
+            logging.info(f"Сохранено {len(new_records)} новых записей в БД.")
         else:
-            print("Новых записей для сохранения не найдено.")
+            logging.info("Новых записей для сохранения не найдено.")
 
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при сохранении пачки: {e}")
+        logging.error(f"Ошибка при сохранении пачки: {e}")
         raise
     finally:
         session.close()
