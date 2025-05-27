@@ -43,6 +43,10 @@ async def process_data_batch(batch: List[dict]):
                 print(f'time field {raw_time}')
                 continue
 
+            if isinstance(value, str) and not value.strip():
+                print(f"Пропускаем запись с пустым или whitespace-only value: {data}")
+                continue
+
             # Проверяем дубликат
             exists = session.execute(
                 select(RawRecords.id).where(
