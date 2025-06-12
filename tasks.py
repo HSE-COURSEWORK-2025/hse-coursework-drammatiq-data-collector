@@ -10,6 +10,7 @@ from sqlalchemy import select
 from db.db_session import get_session
 from db.schemas import RawRecords
 from dateutil import parser
+from dataTransformation import get_data_transformer_by_datatype
 
 
 dramatiq.set_broker(broker)
@@ -30,7 +31,14 @@ async def process_data_batch(batch: List[dict]):
             data_type = data.get("dataType", "")
             email     = user.get("email", "")
             raw_time = raw.get("timestamp") or raw.get("time") or ""
-            value     = raw.get("value", "")
+            value     = str(raw.get("value", ""))
+
+            data_transformer = get_data_transformer_by_datatype(data_type)
+            
+            try:
+                value=data_transformer.transform(value)
+            except Exception as e:
+                logging.error(f'could not process this value {value}: {e}')
 
             if not raw_time:
                 # логируем и пропускаем
@@ -62,6 +70,7 @@ async def process_data_batch(batch: List[dict]):
                 logging.info(f"Пропускаем дубликат: {email} / {data_type} @ {raw_time}")
                 continue
 
+            
             # Готовим новую запись
             new_records.append(RawRecords(
                 data_type=data_type,
