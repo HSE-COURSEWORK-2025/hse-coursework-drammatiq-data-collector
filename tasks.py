@@ -40,6 +40,8 @@ async def process_data_batch(batch: List[dict]):
             except Exception as e:
                 logging.error(f'could not process this value {value}: {e}')
 
+            
+
             if not raw_time:
                 # логируем и пропускаем
                 logging.info(f"Нет поля time/timestamp в записи: {data}")
@@ -56,6 +58,13 @@ async def process_data_batch(batch: List[dict]):
             if isinstance(value, str) and not value.strip():
                 logging.info(f"Пропускаем запись с пустым или whitespace-only value: {data}")
                 continue
+
+            logging.info(f'saving this data: \
+                         data_type: {data_type} \
+                         time_obj: {time_obj} \
+                         email: {email} \
+                         value: {value} \
+                            ')
 
             # Проверяем дубликат
             exists = session.execute(
