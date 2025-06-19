@@ -1,5 +1,5 @@
 ---
-# Deployment основного приложения (Kafka‑consumer)
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,9 +19,8 @@ spec:
       containers:
       - name: data-collection-consumer-app
         image: awesomecosmonaut/data-collection-consumer-app:latest
-        # нет ports — приложение не слушает HTTP
+
 ---
-# Deployment воркера (Dramatiq tasks)
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -1,5 +1,4 @@
 import enum
-from datetime import datetime
 
 from sqlalchemy import (
     Column,
@@ -7,9 +6,7 @@ from sqlalchemy import (
     String,
     DateTime,
     Text,
-    Enum as SQLEnum,
 )
-from sqlalchemy.sql import expression
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -48,7 +45,10 @@ class RawRecords(Base):
     __tablename__ = "raw_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    data_type = Column(String, nullable=False, )
+    data_type = Column(
+        String,
+        nullable=False,
+    )
     email = Column(String, nullable=False, index=True)
     time = Column(DateTime(timezone=True), nullable=False, index=True)
     value = Column(Text, nullable=False)
